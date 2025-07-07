@@ -9,7 +9,7 @@ import (
 
 func cleanInput(text string) []string {
 	var ret []string
-	for _, v := range strings.Fields(text) {
+	for v := range strings.FieldsSeq(text) {
 		ret = append(ret, strings.ToLower(v))
 	}
 
@@ -19,6 +19,8 @@ func cleanInput(text string) []string {
 func main() {
 	userInput := bufio.NewScanner(os.Stdin) // gets blocking input, returns *Scanner with contained input
 	ctx := newCommandContext()
+	dex := newPokedex()
+	ctx.dex = dex
 
 	for {
 		fmt.Print("Pokedex > ")
@@ -37,10 +39,10 @@ func main() {
 			fmt.Println("Unknown command")
 			continue
 		}
-		ctx.setArgs(input[1:])
+		ctx.setArgs(input)
 
 		if err := command.callback(&ctx); err != nil {
-			fmt.Printf("Error in command: %s - %v\n", command.name, err)
+			fmt.Printf("Error in command %s: %v\n", command.name, err)
 		}
 	}
 }

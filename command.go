@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"os"
 	"time"
@@ -43,15 +44,19 @@ func commandHelp(_ *commandContext) error {
 }
 
 func commandExplore(ctx *commandContext) error {
-	if ctx.args == nil {
-		return fmt.Errorf("insufficient arguments. usage: explore <location>")
+	if ctx == nil {
+		return fmt.Errorf("no context passed")
+	}
+
+	if len(ctx.args) < 2 {
+		return fmt.Errorf("insufficient arguments. usage: %s <location>", ctx.args[0])
 	}
 
 	var body []byte
 
-	v, ok := cache.Get(pokeapi.LocationAreaURL + "/" + ctx.args[0])
+	v, ok := cache.Get(pokeapi.LocationAreaURL + "/" + ctx.args[1])
 	if !ok {
-		res, err := http.Get(pokeapi.LocationAreaURL + "/" + ctx.args[0])
+		res, err := http.Get(pokeapi.LocationAreaURL + "/" + ctx.args[1])
 		if err != nil {
 			return err
 		}
@@ -66,7 +71,7 @@ func commandExplore(ctx *commandContext) error {
 			return err
 		}
 
-		cache.Add(pokeapi.LocationAreaURL+"/"+ctx.args[0], body)
+		cache.Add(pokeapi.LocationAreaURL+"/"+ctx.args[1], body)
 	} else {
 		body = v
 	}
@@ -79,6 +84,62 @@ func commandExplore(ctx *commandContext) error {
 
 	for _, v := range location.PokemonEncounters {
 		fmt.Println(v.Pokemon.Name)
+	}
+
+	return nil
+}
+
+func commandCatch(ctx *commandContext) error {
+	if ctx == nil {
+		return fmt.Errorf("no context passed")
+	}
+
+	if len(ctx.args) < 2 {
+		return fmt.Errorf("insufficient arguments. usage: %s <pokemon>", ctx.args[0])
+	}
+
+	req := pokeapi.PokemonURL + "/" + ctx.args[1]
+
+	var body []byte
+
+	v, ok := cache.Get(req)
+	if !ok {
+		res, err := http.Get(req)
+		if err != nil {
+			return err
+		}
+		defer res.Body.Close()
+
+		by, err := io.ReadAll(res.Body)
+		if err != nil {
+			return err
+		}
+
+		cache.Add(req, by)
+
+		body = by
+
+	} else {
+		body = v
+	}
+
+	if string(body) == "Not Found" {
+		return fmt.Errorf("pokemon not found")
+	}
+
+	var pkm pokeapi.Pokemon
+
+	if err := json.Unmarshal(body, &pkm); err != nil {
+		return err
+	}
+
+	fmt.Println("Throwing a Pokeball at", pkm.Name+"...")
+
+	if (rand.Intn(1000) - pkm.BaseExperience) > 500 {
+		fmt.Println(pkm.Name, "was caught!")
+		ctx.dex[pkm.Name] = pkm
+	} else {
+		fmt.Println(pkm.Name, "escaped!")
 	}
 
 	return nil
@@ -99,4 +160,5 @@ func init() {
 	}
 
 	cmds.register("explore", "Shows the pokemon in a location. usage: explore <location>", commandExplore)
+	cmds.register("catch", "Attempt to catch a pokemon. usage: catch <pokemon-name>", commandCatch)
 }

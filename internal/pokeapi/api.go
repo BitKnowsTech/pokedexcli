@@ -3,6 +3,7 @@ package pokeapi
 const BaseURL = "https://pokeapi.co/api/v2"
 const (
 	LocationAreaURL = BaseURL + "/location-area"
+	PokemonURL      = BaseURL + "/pokemon"
 )
 
 type NamedAPIResourceList[T any] struct {

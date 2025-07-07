@@ -6,6 +6,7 @@ type commandContext struct {
 	mapNext string
 	mapPrev string
 	args    []string
+	dex     pokedex
 }
 
 func (cc *commandContext) setArgs(args []string) {
