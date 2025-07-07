@@ -37,7 +37,24 @@ type Pokemon struct {
 	// Sprites PokemonSprites
 	// Cries PokemonCries
 	// Species NamedAPIResource[PokemonSpecies]
-	// Stats []PokemonStat
+	Stats []PokemonStat
 	// Types []PokemonType
+}
 
+type PokemonStat struct {
+	Stat      NamedAPIResource[Stat]
+	Effort    int
+	Base_stat int
+}
+
+type Stat struct {
+	// Id
+	// Name
+	// GameIndex
+	// IsBattleOnly
+	// AffectingMoves
+	// AffectingNatures
+	// Characteristics
+	// MoveDamageClass
+	// Names
 }

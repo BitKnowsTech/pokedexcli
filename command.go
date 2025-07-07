@@ -145,6 +145,45 @@ func commandCatch(ctx *commandContext) error {
 	return nil
 }
 
+func commandInspect(ctx *commandContext) error {
+	if ctx == nil {
+		return fmt.Errorf("no context passed")
+	}
+
+	if len(ctx.args) < 2 {
+		return fmt.Errorf("insufficient arguments. usage: %s <pokemon>", ctx.args[0])
+	}
+
+	pkm, ok := ctx.dex[ctx.args[1]]
+	if !ok {
+		fmt.Println("you have not caught a", ctx.args[1])
+		return nil
+	}
+
+	fmt.Println("#", pkm.Id)
+	fmt.Println("Name:", pkm.Name)
+	fmt.Println("Height:", pkm.Height)
+	fmt.Println("Weight:", pkm.Weight)
+	fmt.Println("Stats:")
+	for _, v := range pkm.Stats {
+		fmt.Println("  -", v.Stat.Name, ":", v.Base_stat)
+	}
+
+	return nil
+}
+
+func commandPokedex(ctx *commandContext) error {
+	if len(ctx.dex) < 1 {
+		fmt.Println("You have no pokemon in your pokedex")
+		return nil
+	}
+	fmt.Println("Your Pokedex:")
+	for _, v := range ctx.dex {
+		fmt.Println(" -", v.Name)
+	}
+	return nil
+}
+
 func init() {
 	cmds = map[string]cliCommand{
 		"exit": {
@@ -157,8 +196,14 @@ func init() {
 			description: "Displays a help message",
 			callback:    commandHelp,
 		},
+		"pokedex": {
+			name:        "pokedex",
+			description: "Display your pokedex",
+			callback:    commandPokedex,
+		},
 	}
 
 	cmds.register("explore", "Shows the pokemon in a location. usage: explore <location>", commandExplore)
 	cmds.register("catch", "Attempt to catch a pokemon. usage: catch <pokemon-name>", commandCatch)
+	cmds.register("inspect", "Inspects a caught pokemon. usage: inspect <pokemon>", commandInspect)
 }
